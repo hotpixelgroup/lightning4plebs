@@ -1,5 +1,7 @@
 # lightning4plebs
 
+[![Build and deploy](https://github.com/hotpixelgroup/lightning4plebs/actions/workflows/deploy.yml/badge.svg)](https://github.com/hotpixelgroup/lightning4plebs/actions/workflows/deploy.yml)
+
 **Understand Lightning. From the specification, not the marketing.**
 
 **Live site: https://hotpixelgroup.github.io/lightning4plebs/**
