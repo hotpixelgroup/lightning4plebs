@@ -1,0 +1,69 @@
+name: Build and deploy lightning4plebs
+
+# This repository holds no source. It builds hotpixelgroup/bitcoin4plebs —
+# one codebase that publishes two sites — with VITE_SITE=lightning, and
+# serves the result. GitHub Pages hosts one site per repository, which is
+# the only reason this repository exists.
+#
+# The source repository is public, so this needs no tokens and no deploy
+# keys: it checks the source out anonymously and deploys with the workflow's
+# own built-in GITHUB_TOKEN.
+
+on:
+  # Pick up changes to the source repository.
+  schedule:
+    - cron: '17 */3 * * *'
+  # ...or ship one immediately.
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source site
+        uses: actions/checkout@v5
+        with:
+          repository: hotpixelgroup/bitcoin4plebs
+          ref: main
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Record which commit this build came from
+        run: |
+          echo "Built from hotpixelgroup/bitcoin4plebs @ $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
+      - run: npx nx build web
+        env:
+          VITE_SITE: lightning
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/web/dist-lightning
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
